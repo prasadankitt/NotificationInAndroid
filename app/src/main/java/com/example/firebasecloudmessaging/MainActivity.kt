@@ -8,9 +8,13 @@ import android.content.Intent
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.RemoteViews
+import android.widget.TextView
 import androidx.core.app.NotificationCompat
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.messaging.FirebaseMessaging
 
 // To make a notification we need -> Notification channel |  Notification Builder |  Notification manager
 
@@ -19,7 +23,7 @@ class MainActivity : AppCompatActivity() {
     private val channelId = "MyNotifications"
     private val channelName = "MyNotifications"
     private val channelDesc = "This is notification"
-    private lateinit var buttonShow : Button
+    private lateinit var myToken : TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,10 +31,22 @@ class MainActivity : AppCompatActivity() {
 
         confirmVersion()
 
-        buttonShow = findViewById(R.id.show)
-        buttonShow.setOnClickListener{
-            generateAndDisplayNotification("This is Title","This is message content")
-        }
+        myToken = findViewById(R.id.tokenText)
+
+        // When the device installs this app an unique registration token generated for that device
+        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val token = task.result
+                Log.d("token", "Refreshed Token : $token")
+                myToken.text = token
+            }
+            else {
+                Log.w("token", "Fetching FCM registration token failed", task.exception)
+                myToken.text = "Token not generated"
+                return@OnCompleteListener
+            }
+        })
+
     }
 
     private fun confirmVersion()

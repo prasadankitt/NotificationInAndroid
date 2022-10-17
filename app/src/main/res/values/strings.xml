@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">FirebaseCloudMessaging</string>
-    <string name="show_notification">Show Notification</string>
+    <string name="token_text">Token Text</string>
 </resources>
