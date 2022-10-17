@@ -9,21 +9,29 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.widget.Button
-import android.widget.RemoteViews
-import android.widget.TextView
+import android.util.Patterns
+import android.view.View
+import android.widget.*
 import androidx.core.app.NotificationCompat
 import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.messaging.FirebaseMessaging
 
-// To make a notification we need -> Notification channel |  Notification Builder |  Notification manager
+//For different  devices we have different tokens so we need authentication of each devices
+// so we authenticate using email and passwords
 
 class MainActivity : AppCompatActivity() {
 
     private val channelId = "MyNotifications"
     private val channelName = "MyNotifications"
     private val channelDesc = "This is notification"
-    private lateinit var myToken : TextView
+
+    private lateinit var email : EditText
+    private lateinit var password : EditText
+    private lateinit var signUp : Button
+    private lateinit var pb : ProgressBar
+    private lateinit var mAuth : FirebaseAuth
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,23 +39,94 @@ class MainActivity : AppCompatActivity() {
 
         confirmVersion()
 
-        myToken = findViewById(R.id.tokenText)
+        mAuth = FirebaseAuth.getInstance()
+        email = findViewById(R.id.email)
+        password = findViewById(R.id.password)
+        signUp = findViewById(R.id.signUp)
+        pb = findViewById(R.id.pb)
+        pb.visibility = View.INVISIBLE
 
-        // When the device installs this app an unique registration token generated for that device
+
+
+        // When the device installs this app an unique registration token generated for every unique device
         FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
             if (task.isSuccessful) {
                 val token = task.result
                 Log.d("token", "Refreshed Token : $token")
-                myToken.text = token
             }
             else {
                 Log.w("token", "Fetching FCM registration token failed", task.exception)
-                myToken.text = "Token not generated"
                 return@OnCompleteListener
             }
         })
 
+
+
+        signUp.setOnClickListener{
+            createUser()
+        }
+
     }
+
+//Authentication using firebase Authentication
+    private fun createUser() {
+        val emailText = email.text.toString().trim()
+        val passwordText = password.text.toString().trim()
+
+        if(emailText.isEmpty()){
+            email.error = "Email Required"
+            email.requestFocus()
+            return
+        }
+        if(!Patterns.EMAIL_ADDRESS.matcher(emailText).matches()){
+            email.error = "Proper Email Required"
+            email.requestFocus()
+            return
+        }
+        if(passwordText.isEmpty() || passwordText.length<=6){
+            password.error = "Password Required with more than 6 characters"
+            password.requestFocus()
+            return
+        }
+
+        pb.visibility = View.VISIBLE
+        mAuth.createUserWithEmailAndPassword(emailText,passwordText).addOnCompleteListener(this){ task ->
+            if(task.isSuccessful){
+                startProfileActivity()
+            }
+            else{
+                if(task.exception is FirebaseAuthUserCollisionException){
+                    userLogin(emailText,passwordText)
+                }
+                else{
+                    pb.visibility = View.INVISIBLE
+                    Toast.makeText(this,task.exception?.message,Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun userLogin(emailText: String, passwordText: String) {
+        mAuth.signInWithEmailAndPassword(emailText,passwordText).addOnCompleteListener(this){ task ->
+            if(task.isSuccessful){
+                startProfileActivity()
+            }
+            else{
+                pb.visibility = View.INVISIBLE
+                Toast.makeText(this,task.exception?.message,Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun startProfileActivity()
+    {
+        val intent = Intent(this,ProfileActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        startActivity(intent)
+    }
+
+
 
     private fun confirmVersion()
     {
