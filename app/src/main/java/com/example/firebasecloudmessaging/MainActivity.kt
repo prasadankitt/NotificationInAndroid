@@ -8,18 +8,12 @@ import android.content.Intent
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.util.Patterns
 import android.view.View
 import android.widget.*
 import androidx.core.app.NotificationCompat
-import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
-import com.google.firebase.messaging.FirebaseMessaging
-
-//For different  devices we have different tokens so we need authentication of each devices
-// so we authenticate using email and passwords
 
 class MainActivity : AppCompatActivity() {
 
@@ -46,26 +40,19 @@ class MainActivity : AppCompatActivity() {
         pb = findViewById(R.id.pb)
         pb.visibility = View.INVISIBLE
 
-
-
-        // When the device installs this app an unique registration token generated for every unique device
-        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
-            if (task.isSuccessful) {
-                val token = task.result
-                Log.d("token", "Refreshed Token : $token")
-            }
-            else {
-                Log.w("token", "Fetching FCM registration token failed", task.exception)
-                return@OnCompleteListener
-            }
-        })
-
-
-
         signUp.setOnClickListener{
             createUser()
         }
 
+    }
+
+    override fun onStart() {
+        super.onStart()
+        //User is already loggedIn send user to Profile Activity
+        if(mAuth.currentUser != null)
+        {
+            startProfileActivity()
+        }
     }
 
 //Authentication using firebase Authentication
