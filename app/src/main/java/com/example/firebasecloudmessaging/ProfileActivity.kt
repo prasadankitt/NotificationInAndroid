@@ -20,6 +20,7 @@ class ProfileActivity : AppCompatActivity() {
 
         mAuth = FirebaseAuth.getInstance()
 
+        FirebaseMessaging.getInstance().subscribeToTopic("weather")
         FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
             if (task.isSuccessful) {
                 val token = task.result

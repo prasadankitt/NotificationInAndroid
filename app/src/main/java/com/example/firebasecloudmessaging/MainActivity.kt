@@ -17,7 +17,7 @@ import com.google.firebase.auth.FirebaseAuthUserCollisionException
 
 class MainActivity : AppCompatActivity() {
 
-    private val channelId = "MyNotifications"
+    val channelId = "MyNotifications"
     private val channelName = "MyNotifications"
     private val channelDesc = "This is notification"
 
@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        //User is already loggedIn send user to Profile Activity
+        //User is already loggedIn
         if(mAuth.currentUser != null)
         {
             startProfileActivity()
@@ -125,30 +125,4 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun getRemoteView(title: String,message: String) : RemoteViews
-    {
-        val remoteView = RemoteViews("com.example.firebasecloudmessaging",R.layout.notification)
-        remoteView.setTextViewText(R.id.title,title)
-        remoteView.setTextViewText(R.id.message,message)
-        remoteView.setImageViewResource(R.id.logo,R.drawable.ic_stat_name)
-
-        return remoteView
-    }
-
-    private fun generateAndDisplayNotification(title:String,message: String) {
-        val pi: PendingIntent = PendingIntent.getActivity(this,0,
-            Intent(this,MainActivity::class.java), PendingIntent.FLAG_MUTABLE)
-
-        val notificationBuilder = NotificationCompat.Builder(this,channelId)
-            .setSmallIcon(R.drawable.ic_stat_name)
-            .setContentTitle(title)
-            .setContentIntent(pi)
-            .setAutoCancel(true)
-            .setContentText(message)
-
-        notificationBuilder.setContent(getRemoteView(title,message))
-
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(1, notificationBuilder.build());
-    }
 }
